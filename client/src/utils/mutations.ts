@@ -19,21 +19,21 @@ export const ADD_USER= gql`
 `;
 
 export const SAVE_BOOK= gql`
-  mutation addSkill($profileId: ID!, $skill: String!) {
-    addSkill(profileId: $profileId, skill: $skill) {
+  mutation saveBook($profileId: ID!, $book: String!) {
+   saveBook(bookData: $bookData) {
       _id
       name
-      skills
+      books
     }
   }
     `;
 
 export const REMOVE_BOOK= gql`
-  mutation removeSkill($profileId: ID!, $skill: String!) {
-    removeSkill(profileId: $profileId, skill: $skill) {
+  mutation removeBook($profileId: ID!, $book: String!) {
+    removeBook(bookId: $bookId, book: $book) {
       _id
       name
-      skills
+      books
     }
   }
 `;

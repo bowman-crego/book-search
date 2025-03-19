@@ -1,4 +1,6 @@
+// import { error } from 'console';
 import { Book, User } from '../models/index.js'
+// import User from '../models/index.js'
 import { signToken } from '../utils/auth.js'
 
 interface User {
@@ -6,7 +8,7 @@ interface User {
     username: string;
     email: string;
     password: string;
-    savedBooks: Book[];
+    savedBooks: typeof Book[];
 }   
 interface BookArgs {
     bookId: string;
@@ -15,16 +17,17 @@ interface BookArgs {
     description: string;
     image: string;
     link: string;
+    bookData: string[];
 }
 
-interface AddBookArgs {
-    bookId: string;
-    title: string; 
-    authors: string []; 
-    description: string; 
-    image: string; 
-    link: string; 
-}
+// interface AddBookArgs {
+//     bookId: string;
+//     title: string; 
+//     authors: string []; 
+//     description: string; 
+//     image: string; 
+//     link: string; 
+// }
 
 interface UserArgs {
     username: string; 
@@ -34,24 +37,25 @@ interface UserArgs {
 
 const resolvers = {
     Query: {
-    user: async (_parent: unknown, { username }: UserArgs) => {
-        return await User.findOne({ username }).populate('users')
-    },
-    book: async (_parent: unknown, { bookId }: BookArgs) => {
-        return await Book.findOne({
-            bookId: bookId
-        })
-    },
-    me: async () => {
-        return await User.find().populate('users')
+    // user: async (_parent: unknown, { username }: UserArgs) => {
+    //     return await User.findOne({ username }).populate('users')
+    // },
+    // book: async (_parent: unknown, { bookId }: BookArgs) => {
+    //     return await Book.findOne({
+    //         bookId: bookId
+    //     })
+    // },
+    me: async (_parent: unknown, _args: unknown, context: any ) => {
+       if(context.user) {
+        const currentUser = await User.findOne({_id: context.user._id})
+        return currentUser
+       }
+       throw new Error('Failed to authenticate')
     }
 }, 
 
 Mutation: {
-    AddBook: async (_parent: unknown, { bookId, title, authors, description, image, link } : AddBookArgs) => {
-        const book = await Book.create({ bookId, title, authors, description, image, link })
-        return book; 
-    },
+
     login: async (_parent: unknown, { email, password }: UserArgs) => {
         const user = await User
         .findOne({ email })
@@ -63,24 +67,24 @@ Mutation: {
         if (!correctPw) {
             throw new Error('Incorrect credentials')
         }
-        const token = signToken(user)
+        const token = signToken(user.username, user.email, user._id)
         return { token, user }
     },
     addUser: async (_parent: unknown, { username, email, password }: UserArgs) => {
         const user = await User.create({ username, email, password })
-        const token = signToken(user)
+        const token = signToken(user.username, user.email, user._id)
         return { token, user }
     },
-    saveBook: async (_parent: unknown, { bookData }: BookArgs) => {
+    saveBook: async (_parent: unknown, { bookData }: BookArgs, context: any) => {
         return await User.findOneAndUpdate(
-            { _id: user._id },
+            { _id: context.user._id },
             { $addToSet: { savedBooks: bookData } },
             { new: true }
         )
     },
-    removeBook: async (_parent: unknown, { bookId }: BookArgs) => {
+    removeBook: async (_parent: unknown, { bookId }: BookArgs, context: any) => {
         return await User.findOneAndUpdate(
-            { _id: user._id },
+            { _id: context.user._id },
             { $pull: { savedBooks: { bookId } } },
             { new: true }
         )

@@ -1,25 +1,23 @@
 import express from "express";
 import path from "node:path";
 import type { Request, Response } from "express";
-import db  from "./config/connection.js";
-import { expressMiddleware } from "@apollo-server-express4";
+import { expressMiddleware } from "@apollo/server/express4";
 // import routes from "./routes/index.js";
 import { ApolloServer } from "@apollo/server";
 import { typeDefs, resolvers } from "./schemas/index.js";
 import { authenticateToken } from "./utils/auth.js";
 
+
+const PORT = process.env.PORT || 3001;
+const app = express();
 const server = new ApolloServer({
   typeDefs,
   resolvers,
 });
 
-
 const startApolloServer = async () => {
   await server.start();
-  await db();
-
-  const PORT = process.env.PORT || 3001;
-  const app = express();
+ 
   
 
   app.use(express.urlencoded({ extended: true }));
